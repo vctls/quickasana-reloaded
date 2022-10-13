@@ -1,0 +1,29 @@
+{
+  "manifest_version": 2,
+  "name": "Quick Asana",
+  "version": "0.1",
+  "icons": {
+    "48": "icons/asana.png"
+  },
+
+  "permissions": [
+    "storage",
+    "tabs",
+    "<all_urls>"
+  ],
+
+  "browser_action": {
+    "default_icon": "icons/asana.png",
+    "default_title": "Quick Asana"
+  },
+
+  "background": {
+    "scripts": ["background.js"]
+  },
+
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "{073d8528-4b24-11ed-9b73-c71d3da4ab37}"
+    }
+  }
+}
