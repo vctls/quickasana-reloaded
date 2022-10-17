@@ -1,48 +1,43 @@
-function handleClick() {
-	browser.tabs.query({currentWindow: true, active: true}).then(handleTabs);
-}
-
-function handleTabs(tabs) {
+async function handleClick() {
+	const tabs = await browser.tabs.query({currentWindow: true, active: true});
 	if (tabs.length != 1) {
 		return;
 	}
+	const tab = tabs[0];
 
-	handleTab(tabs[0]);
-}
-
-function handleTab(tab) {
-	console.log(tab.title, tab.url);
+	const cfg = await browser.storage.sync.get();
 	const req = {
 		data: {
-			workspace: browser.storage.sync.get('workspace'),
-			assignee: browser.storage.sync.get('assignee'),
+			workspace: cfg['workspace'],
+			assignee: cfg['assignee'],
 			name: tab.title,
 			notes: tab.url,
 		},
 	};
-
 	console.log('-->', req);
 
-	console.log(browser.tabs);
-	browser.tabs.captureTab(tab.id).then(img => console.log(img));
+	const promiseImg = browser.tabs.captureTab(tab.id);
 
-	fetch(
+	const promiseCreateResp = fetch(
 		'https://app.asana.com/api/1.0/tasks',
 		{
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${browser.storage.sync.get('token')}`,
+				'Authorization': `Bearer ${cfg['token']}`,
 				'Content-Type': 'application/json',
 				'Accept': 'application/json',
 			},
 			body: JSON.stringify(req),
 		},
-	).then(resp => {
-		console.log('<--', resp);
-		resp.json().then(js => console.log('<--', js));
-	
-		browser.tabs.remove([tab.id]);
-	});
+	);
+
+	const img = await promiseImg;
+	const createResp = await promiseCreateResp;
+	const create = await createResp.json();
+
+	console.log('<--', create);
+
+	browser.tabs.remove([tab.id]);
 }
 
 browser.browserAction.onClicked.addListener(handleClick);
