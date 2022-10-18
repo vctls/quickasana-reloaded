@@ -1,12 +1,6 @@
 const reData = new RegExp('^data:(.*?);base64,(.*)$');
 
-async function handleClick() {
-	const tabs = await browser.tabs.query({currentWindow: true, active: true});
-	if (tabs.length != 1) {
-		return;
-	}
-	const tab = tabs[0];
-
+async function handleClick(tab, e) {
 	const promiseImgURL = browser.tabs.captureTab(tab.id);
 
 	const cfg = await browser.storage.sync.get();
@@ -38,7 +32,9 @@ async function handleClick() {
 	const img = atob(imgBase64);
 
 	// All tab info captured
-	browser.tabs.remove([tab.id]);
+	if (!e.modifiers.includes('Command')) {
+		browser.tabs.remove([tab.id]);
+	}
 
 	const createResp = await promiseCreateResp;
 	const create = await createResp.json();
