@@ -5,10 +5,29 @@ const reData = new RegExp('^data:(.*?);base64,(.*)$');
 async function handleClick(tab, e) {
 	const imgURL = await browser.tabs.captureTab(tab.id);
 
+	const selecteds = await browser.tabs.executeScript(
+		tab.id,
+		{
+			code: 'getSelection().toString()',
+		},
+	);
+	const selected = selecteds.filter(x => x).join('\n');
+
+	let noteParts = [
+		`<body>`,
+		`<a href="${encodeURI(tab.url)}">${escapeHTML(tab.url)}</a>`,
+	];
+
+	if (selected) {
+		noteParts.push(`\n\n${escapeHTML(selected)}`);
+	}
+
+	noteParts.push('</body>');
+
 	const store = {};
 	store[`create_${crypto.randomUUID()}`] = {
 		name: tab.title,
-		html_notes: `<body><a href="${encodeURI(tab.url)}">${escapeHTML(tab.url)}</a></body>`,
+		html_notes: noteParts.join(''),
 		attach: imgURL,
 		filename: 'screenshot.png',
 	};
