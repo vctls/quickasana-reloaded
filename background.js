@@ -10,19 +10,12 @@ async function handleClick(tab, e) {
 
 	const imgURL = await browser.tabs.captureTab(tab.id);
 
-	const selecteds = await browser.tabs.executeScript(
-		tab.id,
-		{
-			code: 'getSelection().toString()',
-		},
-	);
-	const selected = selecteds.filter(x => x).join('\n');
-
 	let noteParts = [
 		`<body>`,
 		`<a href="${encodeURI(tab.url)}">${escapeHTML(tab.url)}</a>`,
 	];
 
+	const selected = await getSelectedText(tab.id);
 	if (selected) {
 		noteParts.push(`\n\n${escapeHTML(selected)}`);
 	}
@@ -133,21 +126,8 @@ async function create(cfg, task) {
 }
 
 async function attach(cfg, task) {
-	const [_, type, base64] = task.attach.match(reData);
-	const bytes = atob(base64);
-
-	const arr = new Uint8Array(bytes.length);
-	for (let i = 0; i < bytes.length; i++) {
-		arr[i] = bytes.charCodeAt(i);
-	}
-	const blob = new Blob(
-		[arr],
-		{
-			type: type,
-		},
-	);
-
 	const data = new FormData();
+	const blob = dataURLToBlob(task.attach);
 	data.append('file', blob, task.filename);
 
 	const attachResp = await fetch(
@@ -165,6 +145,34 @@ async function attach(cfg, task) {
 	if (!attachResp.ok) {
 		throw attachResp.statusText;
 	}
+}
+
+async function getSelectedText(tabId) {
+	const selecteds = await browser.tabs.executeScript(
+		tabId,
+		{
+			code: 'getSelection().toString()',
+		},
+	);
+
+	return selecteds.filter(x => x).join('\n');
+}
+
+function dataURLToBlob(url) {
+	const [_, type, base64] = url.match(reData);
+	const bytes = atob(base64);
+
+	const arr = new Uint8Array(bytes.length);
+	for (let i = 0; i < bytes.length; i++) {
+		arr[i] = bytes.charCodeAt(i);
+	}
+
+	return new Blob(
+		[arr],
+		{
+			type: type,
+		},
+	);
 }
 
 function escapeHTML(unsafe) {
