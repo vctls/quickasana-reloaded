@@ -94,8 +94,8 @@ async function sendPaste() {
 async function create(cfg, task) {
 	const req = {
 		data: {
-			workspace: cfg['workspace'],
-			assignee: cfg['assignee'],
+			workspace: cfg.workspace,
+			assignee: cfg.assignee,
 			name: task.name,
 			html_notes: task.html_notes,
 		},
@@ -106,7 +106,7 @@ async function create(cfg, task) {
 		{
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${cfg['token']}`,
+				'Authorization': `Bearer ${cfg.token}`,
 				'Content-Type': 'application/json',
 				'Accept': 'application/json',
 			},
@@ -121,10 +121,10 @@ async function create(cfg, task) {
 
 	const create = await createResp.json();
 
-	if (task['attach']) {
+	if (task.attach) {
 		const store = {};
 		store[`attach_${crypto.randomUUID()}`] = {
-			gid: create['data']['gid'],
+			gid: create.data.gid,
 			attach: task.attach,
 			filename: task.filename,
 		};
@@ -155,7 +155,7 @@ async function attach(cfg, task) {
 		{
 			method: 'POST',
 			headers: {
-				'Authorization': `Bearer ${cfg['token']}`,
+				'Authorization': `Bearer ${cfg.token}`,
 			},
 			credentials: 'omit',
 			body: data,
@@ -170,7 +170,7 @@ async function attach(cfg, task) {
 function escapeHTML(unsafe) {
 	const div = document.createElement('div');
 	div.innerText = unsafe;
-	return div.innerHTML;
+	return div.innerHTML.replaceAll('<br>', '\n');
 }
 
 const typeHandlers = new Map([
