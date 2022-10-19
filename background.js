@@ -8,7 +8,7 @@ async function handleClick(tab, e) {
 	const store = {};
 	store[`create_${crypto.randomUUID()}`] = {
 		name: tab.title,
-		notes: tab.url,
+		html_notes: `<body><a href="${encodeURI(tab.url)}">${escapeHTML(tab.url)}</a></body>`,
 		attach: imgURL,
 		filename: 'screenshot.png',
 	};
@@ -22,6 +22,7 @@ async function handleClick(tab, e) {
 let inHandleChange = false;
 
 async function handleChange(e) {
+	// async functions allow concurrency. Add sketchy mutex.
 	if (inHandleChange) {
 		return;
 	}
@@ -61,7 +62,7 @@ async function create(cfg, task) {
 			workspace: cfg['workspace'],
 			assignee: cfg['assignee'],
 			name: task.name,
-			notes: task.notes,
+			html_notes: task.html_notes,
 		},
 	};
 
@@ -129,6 +130,12 @@ async function attach(cfg, task) {
 	if (!attachResp.ok) {
 		throw attachResp.statusText;
 	}
+}
+
+function escapeHTML(unsafe) {
+	const div = document.createElement('div');
+	div.innerText = unsafe;
+	return div.innerHTML;
 }
 
 const typeHandlers = new Map([
