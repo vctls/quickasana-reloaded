@@ -43,6 +43,17 @@ async function handleClick(tab, e) {
 	}
 }
 
+async function sendPaste() {
+	const clip = await navigator.clipboard.readText();
+
+	const store = {};
+	store[`create_${crypto.randomUUID()}`] = {
+		name: 'Paste',
+		html_notes: `<body>${escapeHTML(clip)}</body>`,
+	};
+	await browser.storage.local.set(store);
+}
+
 let inHandleChange = false;
 
 async function handleChange(e) {
@@ -78,17 +89,6 @@ async function handleChangeInt(e) {
 	await typeHandlers.get(type)(cfg, task);
 
 	await browser.storage.local.remove([key]);
-}
-
-async function sendPaste() {
-	const clip = await navigator.clipboard.readText();
-
-	const store = {};
-	store[`create_${crypto.randomUUID()}`] = {
-		name: 'Paste',
-		html_notes: `<body>${escapeHTML(clip)}</body>`,
-	};
-	await browser.storage.local.set(store);
 }
 
 async function create(cfg, task) {
