@@ -1,30 +1,40 @@
 {
-  "manifest_version": 2,
-  "name": "Quick Asana",
-  "version": "0.1",
-  "icons": {
-    "48": "icons/asana.png"
-  },
+	"manifest_version": 2,
+		"name": "Quick Asana",
+		"version": "0.1",
+		"icons": {
+			"16": "icons/idle-16.png",
+			"48": "icons/idle-48.png",
+			"64": "icons/idle-64.png",
+			"128": "icons/idle-128.png",
+			"256": "icons/idle-256.png"
+		},
 
-  "permissions": [
-    "clipboardRead",
-    "storage",
-    "unlimitedStorage",
-    "<all_urls>"
-  ],
+		"permissions": [
+			"clipboardRead",
+		"storage",
+		"unlimitedStorage",
+		"<all_urls>"
+		],
 
-  "browser_action": {
-    "default_icon": "icons/asana.png",
-    "default_title": "Quick Asana"
-  },
+		"browser_action": {
+			"default_icon": {
+				"16": "icons/idle-16.png",
+				"48": "icons/idle-48.png",
+				"64": "icons/idle-64.png",
+				"128": "icons/idle-128.png",
+				"256": "icons/idle-256.png"
+			},
+			"default_title": "Quick Asana"
+		},
 
-  "background": {
-    "scripts": ["background.js"]
-  },
+		"background": {
+			"scripts": ["background.js"]
+		},
 
-  "browser_specific_settings": {
-    "gecko": {
-      "id": "{073d8528-4b24-11ed-9b73-c71d3da4ab37}"
-    }
-  }
+		"browser_specific_settings": {
+			"gecko": {
+				"id": "{073d8528-4b24-11ed-9b73-c71d3da4ab37}"
+			}
+		}
 }

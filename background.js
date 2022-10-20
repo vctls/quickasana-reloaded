@@ -2,6 +2,26 @@
 
 const reData = new RegExp('^data:(.*?);base64,(.*)$');
 
+const idleIcon = {
+	path: {
+		16: 'icons/idle-16.png',
+		48: 'icons/idle-48.png',
+		64: 'icons/idle-64.png',
+		128: 'icons/idle-128.png',
+		256: 'icons/idle-256.png',
+	},
+}
+
+const activeIcon = {
+	path: {
+		16: 'icons/active-16.png',
+		48: 'icons/active-48.png',
+		64: 'icons/active-64.png',
+		128: 'icons/active-128.png',
+		256: 'icons/active-256.png',
+	},
+}
+
 async function handleClick(tab, e) {
 	if (e.modifiers.includes('Shift')) {
 		await sendPaste();
@@ -22,14 +42,12 @@ async function handleClick(tab, e) {
 
 	noteParts.push('</body>');
 
-	const store = {};
-	store[`create_${crypto.randomUUID()}`] = {
+	await queue('create', {
 		name: tab.title,
 		html_notes: noteParts.join(''),
 		attach: imgURL,
 		filename: 'screenshot.png',
-	};
-	await browser.storage.local.set(store);
+	});
 
 	if (!e.modifiers.includes('Command')) {
 		browser.tabs.remove([tab.id]);
@@ -39,12 +57,10 @@ async function handleClick(tab, e) {
 async function sendPaste() {
 	const clip = await navigator.clipboard.readText();
 
-	const store = {};
-	store[`create_${crypto.randomUUID()}`] = {
+	await queue('create', {
 		name: 'Paste',
 		html_notes: `<body>${escapeHTML(clip)}</body>`,
-	};
-	await browser.storage.local.set(store);
+	});
 }
 
 let inHandleChange = false;
@@ -68,6 +84,7 @@ async function handleChangeInt(e) {
 	const keys = Object.getOwnPropertyNames(queue);
 
 	if (keys.length == 0) {
+		browser.browserAction.setIcon(idleIcon);
 		return;
 	}
 
@@ -115,13 +132,11 @@ async function create(cfg, task) {
 	const create = await createResp.json();
 
 	if (task.attach) {
-		const store = {};
-		store[`attach_${crypto.randomUUID()}`] = {
+		await queue('attach', {
 			gid: create.data.gid,
 			attach: task.attach,
 			filename: task.filename,
-		};
-		await browser.storage.local.set(store);
+		});
 	}
 }
 
@@ -145,6 +160,14 @@ async function attach(cfg, task) {
 	if (!attachResp.ok) {
 		throw attachResp.statusText;
 	}
+}
+
+async function queue(type, details) {
+	browser.browserAction.setIcon(activeIcon);
+
+	const store = {};
+	store[`${type}_${crypto.randomUUID()}`] = details;
+	await browser.storage.local.set(store);
 }
 
 async function getSelectedText(tabId) {
