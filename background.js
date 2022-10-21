@@ -23,6 +23,12 @@ const activeIcon = {
 }
 
 async function handleClick(tab, e) {
+	const cfg = await browser.storage.sync.get();
+	if (!cfg.token || !cfg.workspace || !cfg.assignee) {
+		await browser.runtime.openOptionsPage();
+		return;
+	}
+
 	if (e.modifiers.includes('Shift')) {
 		await sendPaste();
 		return;
@@ -106,6 +112,10 @@ async function handleChangeInt(e) {
 }
 
 async function create(cfg, task) {
+	if (!cfg.workspace || !cfg.assignee) {
+		throw 'missing workspace/assignee';
+	}
+
 	const req = {
 		data: {
 			workspace: cfg.workspace,
