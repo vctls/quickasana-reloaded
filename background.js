@@ -95,6 +95,10 @@ async function handleChangeInt(e) {
 
 	const cfg = await browser.storage.sync.get();
 
+	if (!cfg.token) {
+		throw 'missing token';
+	}
+
 	const type = key.split('_', 1)[0];
 	await typeHandlers.get(type)(cfg, task);
 
