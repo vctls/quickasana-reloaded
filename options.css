@@ -1,0 +1,17 @@
+body {
+	margin: 10px;
+	font-family: monospace;
+}
+
+ul {
+	margin-top: 0;
+}
+
+input {
+	font-family: monospace;
+	width: 53ch;
+}
+
+div {
+	margin-bottom: 5px;
+}

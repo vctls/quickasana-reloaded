@@ -12,9 +12,9 @@
 
 		"permissions": [
 			"clipboardRead",
-		"storage",
-		"unlimitedStorage",
-		"<all_urls>"
+			"storage",
+			"unlimitedStorage",
+			"<all_urls>"
 		],
 
 		"browser_action": {
@@ -30,6 +30,10 @@
 
 		"background": {
 			"scripts": ["background.js"]
+		},
+
+		"options_ui": {
+			"page": "options.html"
 		},
 
 		"browser_specific_settings": {

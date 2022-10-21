@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<link rel="stylesheet" href="options.css">
+</head>
+
+<body>
+	<div>
+		<ul>
+			<li>Click <a href="https://app.asana.com/0/my-apps">here</a></li>
+			<li>Click "+ Create new token"</li>
+			<li>Type "Quick Asana" in the "Token name" field</li>
+			<li>Check the box next to "I agree to the API terms and conditions"</li>
+			<li>Click "Create token"</li>
+			<li>Click "Copy"</li>
+			<li>Return to this tab</li>
+			<li>Paste the token into the field below</li>
+		</ul>
+		Personal access token: <input type="text" id="token">
+	</div>
+
+	<div>
+		Workspace: <select id="workspace"></select>
+	</div>
+
+	<div>
+		Assignee: <select id="assignee"></select>
+	</div>
+
+	<script src="options.js"></script>
+</body>
+</html>
+
