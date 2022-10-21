@@ -34,6 +34,10 @@ async function handleClick(tab, e) {
 		return;
 	}
 
+	if (!tab.url) {
+		throw 'missing tab.url';
+	}
+
 	const imgURL = await browser.tabs.captureTab(tab.id);
 
 	let noteParts = [
