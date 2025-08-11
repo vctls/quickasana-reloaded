@@ -14,6 +14,8 @@
 			"clipboardRead",
 			"storage",
 			"unlimitedStorage",
+			"menus",
+			"notifications",
 			"<all_urls>"
 		],
 

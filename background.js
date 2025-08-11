@@ -1,5 +1,7 @@
 'use strict';
 
+const apiUrl = `https://app.asana.com/api/1.0`;
+
 const reData = new RegExp('^data:(.*?);base64,(.*)$');
 
 const idleIcon = {
@@ -60,8 +62,58 @@ async function handleClick(tab, e) {
 	});
 
 	if (!e.modifiers.includes('Command')) {
-		browser.tabs.remove([tab.id]);
+		await browser.tabs.remove([tab.id]);
 	}
+}
+
+/**
+ * @param {browser.menus.OnClickData} onClickData
+ * @returns {Promise<void>}
+ */
+async function handleContextMenuAction(onClickData) {
+	const cfg = await browser.storage.sync.get();
+	if (!cfg.token || !cfg.workspace || !cfg.assignee) {
+		await browser.runtime.openOptionsPage();
+		return;
+	}
+
+	let selected = onClickData.selectionText;
+
+	if (!selected) {
+		// This should never happen since the menu entry is only supposed to apply to a selection context.
+	    throw 'no text selected';
+	}
+
+	let dueOn = selected.match(/20\d{2}-[0-1][0-9]-[0-3][0-9]/)?.[0] || undefined;
+
+	if (dueOn) {
+		selected = selected.replace(dueOn,'');
+	}
+
+	const email = selected.match(/\S+@\S+\.\S+/)?.[0] || undefined;
+	let assigneeGid = undefined
+
+	if (email) {
+		assigneeGid = await getUser(cfg, email)
+		if (assigneeGid) {
+			selected = selected.replace(email, '')
+		}
+	}
+
+	let noteParts = [
+		`<body>`,
+		`<a href="${encodeURI(onClickData.pageUrl)}">${escapeHTML(onClickData.pageUrl)}</a>`,
+		`\n\n${escapeHTML(selected)}`,
+		'</body>',
+	];
+
+	await queue('create', {
+		// TODO Truncate the task name. What's the maximum length?
+		name: selected.trim(),
+		dueOn: dueOn,
+		assignee: assigneeGid,
+		html_notes: noteParts.join(''),
+	});
 }
 
 async function sendPaste() {
@@ -75,7 +127,7 @@ async function sendPaste() {
 
 let inHandleChange = false;
 
-async function handleChange(e) {
+async function handleChange() {
 	// async functions allow concurrency. Add sketchy mutex.
 	if (inHandleChange) {
 		return;
@@ -83,18 +135,18 @@ async function handleChange(e) {
 
 	try {
 		inHandleChange = true;
-		await handleChangeInt(e);
+		await handleChangeInt();
 	} finally {
 		inHandleChange = false;
 	}
 }
 
-async function handleChangeInt(e) {
+async function handleChangeInt() {
 	const queue = await browser.storage.local.get();
 	const keys = Object.getOwnPropertyNames(queue);
 
-	if (keys.length == 0) {
-		browser.browserAction.setIcon(idleIcon);
+	if (keys.length === 0) {
+		await browser.browserAction.setIcon(idleIcon);
 		return;
 	}
 
@@ -123,14 +175,15 @@ async function create(cfg, task) {
 	const req = {
 		data: {
 			workspace: cfg.workspace,
-			assignee: cfg.assignee,
+			assignee: task.assignee || cfg.assignee,
+			due_on: task.dueOn,
 			name: task.name,
 			html_notes: task.html_notes,
 		},
 	};
 
 	const createResp = await fetch(
-		'https://app.asana.com/api/1.0/tasks',
+		`${apiUrl}/tasks`,
 		{
 			method: 'POST',
 			headers: {
@@ -149,6 +202,18 @@ async function create(cfg, task) {
 
 	const create = await createResp.json();
 
+	try {
+		await navigator.clipboard.writeText(create.data.permalink_url);
+	} catch (DOMException){
+		// This may fail in some circumstances,
+		// for example if the tab isn't focused.
+	}
+
+	await notify(
+		'New task created',
+		create.data.permalink_url,
+	);
+
 	if (task.attach) {
 		await queue('attach', {
 			gid: create.data.gid,
@@ -163,8 +228,9 @@ async function attach(cfg, task) {
 	const blob = dataURLToBlob(task.attach);
 	data.append('file', blob, task.filename);
 
+
 	const attachResp = await fetch(
-		`https://app.asana.com/api/1.0/tasks/${encodeURIComponent(task.gid)}/attachments`,
+		`${apiUrl}/tasks/${encodeURIComponent(task.gid)}/attachments`,
 		{
 			method: 'POST',
 			headers: {
@@ -180,8 +246,57 @@ async function attach(cfg, task) {
 	}
 }
 
+/**
+ * @param cfg
+ * @param {string} email
+ * @returns {Promise<?string>}
+ */
+async function getUser(cfg, email) {
+	const getUserResp = await fetch(
+		`${apiUrl}/users/${email}`,
+		{
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${cfg.token}`,
+				'Accept': 'application/json',
+			},
+			credentials: 'omit',
+		},
+	);
+
+	if (!getUserResp.ok) {
+		// FIXME If this notification is shown just before creating a task,
+		//  then the corresponding task creation notification won't be shown.
+		//  Find a way of queuing these notifications,
+		//  without relying on the tasks queue.
+		await notify(
+			'Assignee not found',
+			`No user found with email ${email}`,
+		)
+		return null;
+	}
+
+	const result = await getUserResp.json();
+
+	return result.data.gid;
+}
+
+/**
+ * @param {string} title
+ * @param {string} message
+ * @returns {Promise<void>}
+ */
+async function notify(title, message) {
+	await browser.notifications.create({
+		type: 'basic',
+		iconUrl: browser.runtime.getURL('icons/idle-48.png'),
+		title: title,
+		message: message,
+	})
+}
+
 async function queue(type, details) {
-	browser.browserAction.setIcon(activeIcon);
+	await browser.browserAction.setIcon(activeIcon);
 
 	const store = {};
 	store[`${type}_${crypto.randomUUID()}`] = details;
@@ -227,6 +342,14 @@ const typeHandlers = new Map([
 	['attach', attach],
 ]);
 
+browser.menus.create(
+	{
+		id: "quick_asana",
+		title: "Create task from selection",
+		contexts: ["selection"],
+		onclick: handleContextMenuAction,
+	},
+);
 browser.browserAction.onClicked.addListener(handleClick);
 browser.storage.local.onChanged.addListener(handleChange);
 setInterval(handleChange, 10000);

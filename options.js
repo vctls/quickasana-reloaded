@@ -4,7 +4,7 @@ async function onLoad() {
 	const token = document.getElementById('token');
 	token.value = cfg.token || '';
 	token.addEventListener('input', async () => {
-		set('token', token.value);
+		await set('token', token.value);
 		await populateWorkspaces();
 		await populateAssignees();
 	});
@@ -53,7 +53,7 @@ async function populateWorkspaces() {
 		option.value = workspace.gid;
 		select.appendChild(option);
 
-		if (option.value == cfg.workspace) {
+		if (option.value === cfg.workspace) {
 			option.selected = true;
 		}
 	}
