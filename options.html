@@ -6,7 +6,10 @@
 </head>
 
 <body>
+	<h1>Quick Asana configuration</h1>
 	<div>
+		<label for="token">Personal access token:</label> <input type="text" id="token">
+		<h3>How to get your personal access token</h3>
 		<ul>
 			<li>Click <a href="https://app.asana.com/0/my-apps">here</a></li>
 			<li>Click "+ Create new token"</li>
@@ -17,15 +20,25 @@
 			<li>Return to this tab</li>
 			<li>Paste the token into the field below</li>
 		</ul>
-		Personal access token: <input type="text" id="token">
 	</div>
 
 	<div>
-		Workspace: <select id="workspace"></select>
+		<label for="workspace">Workspace:</label> <select id="workspace"></select>
 	</div>
 
 	<div>
-		Assignee: <select id="assignee"></select>
+		<label for="project">Project:</label> <select id="project"></select>
+	</div>
+
+	<div>
+		<label for="assignee">Default assignee:</label> <select id="assignee"></select>
+	</div>
+
+	<h2>Tags</h2>
+	Use these tags to specify the corresponding field values in your tasks.
+	<div>
+		<label for="dueDateTag">Due date:</label> <input type="text" id="dueDateTag">
+		<label for="assigneeTag">Assignee:</label> <input type="text" id="assigneeTag">
 	</div>
 
 	<script src="options.js"></script>

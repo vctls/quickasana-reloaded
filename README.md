@@ -11,16 +11,23 @@ There are two ways of creating tasks with this extension:
    * ⌘-Click: Create a task in Asana from the current tab
    * ⇧-Click: Create a task in Asana from the clipboard contents
 
-2. Using the context menu entry
-   * Select some text => Right click => "Create task from selection"
+2. Using the context menu entry on selected text
+   * Select some text => Right-click => "Create task from selection"
 
-When creating a task from the current tab, Quick Asana will use the page title as the task name, put a link to the page in the notes, and attach a screenshot of the visible tab contents to the task. If there is highlighted text when you click the extension icon, the text will be added to the task notes.
+When creating a task from the current tab, Quick Asana will use the page title as the task name,
+put a link to the page in the notes, and attach a screenshot of the visible tab contents to the task.
+If there is highlighted text when you click the extension icon, the text will be added to the task notes.
 
-When creating a task from selected text, Quick Asana will try to find a due date in the form "YYYY-MM-DD", and an
-assignee identified by their email address. If these are found, the corresponding task fields will be filled, and the
-values will be removed from the text before it's added to the task name.
+When creating a task from selected text, Quick Asana will use the configured tags to fill in the corresponding 
+field values. If these are found, the values will be removed from the text before it's added to the task name.
+The due date must be in a recognizable format. The most reliable would be YYYY-MM-DD.
+The assignee must be a user email address.
+Tag names can be changed on the extension configuration page. 
 
-Once the task is created, its permalink will be copied to the clipboard (provided that the tab is still focused).
+Once the task is created, its permalink will be copied to the clipboard, provided that the tab is still focused
+(browser security constraints prevent unfocused tabs from accessing the clipboard).
 
 ## Setup
-Quick Asana uses [personal access tokens](https://developers.asana.com/docs/personal-access-token) for authentication. Before using the extension the first time, you'll need to provide a token in the extension preferences. You'll then need to choose a workspace and assignee for new tasks.
+Quick Asana uses [personal access tokens](https://developers.asana.com/docs/personal-access-token) for authentication.
+Before using the extension the first time, you'll need to provide a token in the extension preferences.
+You'll then need to choose a workspace, project, and assignee for new tasks.

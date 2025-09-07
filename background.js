@@ -84,19 +84,33 @@ async function handleContextMenuAction(onClickData) {
 	    throw 'no text selected';
 	}
 
-	let dueOn = selected.match(/20\d{2}-[0-1][0-9]-[0-3][0-9]/)?.[0] || undefined;
+	const dueDateTag = RegExp.escape(cfg.dueDateTag);
+	const dueDateMatches = selected.match(new RegExp(`\\b${dueDateTag}(\\S+)`));
+	let dueDate = dueDateMatches?.[1] || undefined;
 
-	if (dueOn) {
-		selected = selected.replace(dueOn,'');
+	if (dueDate) {
+		selected = selected.replace(dueDateMatches?.[0],'');
+		
+		try {
+		    dueDate = new Date(dueDate).toISOString().substring(0, 10);
+		} catch($e) {
+			await notify(
+				'Unrecognized date',
+				`The due date ${dueDate} is not a valid date.`,
+			)
+			throw 'Invalid due date';
+		}
 	}
 
-	const email = selected.match(/\S+@\S+\.\S+/)?.[0] || undefined;
+	const assigneeTag = RegExp.escape(cfg.assigneeTag);
+	const assigneeMatches = selected.match(new RegExp(`\\b${assigneeTag}(\\S+)`));
+	const assigneeEmail = assigneeMatches?.[1] || undefined;
 	let assigneeGid = undefined
 
-	if (email) {
-		assigneeGid = await getUser(cfg, email)
+	if (assigneeEmail) {
+		assigneeGid = await getUser(cfg, assigneeEmail)
 		if (assigneeGid) {
-			selected = selected.replace(email, '')
+			selected = selected.replace(assigneeMatches?.[0], '')
 		}
 	}
 
@@ -109,8 +123,10 @@ async function handleContextMenuAction(onClickData) {
 
 	await queue('create', {
 		// TODO Truncate the task name. What's the maximum length?
+		// TODO Use a tag for the name instead, and default to the truncated body when absent.
+		//  A different syntax will be needed for the subject tag, as it will contain spaces.
 		name: selected.trim(),
-		dueOn: dueOn,
+		dueDate: dueDate,
 		assignee: assigneeGid,
 		html_notes: noteParts.join(''),
 	});
@@ -175,8 +191,9 @@ async function create(cfg, task) {
 	const req = {
 		data: {
 			workspace: cfg.workspace,
+			projects: [ cfg.project ],
 			assignee: task.assignee || cfg.assignee,
-			due_on: task.dueOn,
+			due_on: task.dueDate,
 			name: task.name,
 			html_notes: task.html_notes,
 		},
@@ -206,7 +223,7 @@ async function create(cfg, task) {
 		await navigator.clipboard.writeText(create.data.permalink_url);
 	} catch (DOMException){
 		// This may fail in some circumstances,
-		// for example if the tab isn't focused.
+		// for example, if the tab isn't focused.
 	}
 
 	await notify(
@@ -265,15 +282,11 @@ async function getUser(cfg, email) {
 	);
 
 	if (!getUserResp.ok) {
-		// FIXME If this notification is shown just before creating a task,
-		//  then the corresponding task creation notification won't be shown.
-		//  Find a way of queuing these notifications,
-		//  without relying on the tasks queue.
 		await notify(
 			'Assignee not found',
 			`No user found with email ${email}`,
 		)
-		return null;
+		throw 'Assignee not found';
 	}
 
 	const result = await getUserResp.json();

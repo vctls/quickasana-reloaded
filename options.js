@@ -6,15 +6,40 @@ async function onLoad() {
 	token.addEventListener('input', async () => {
 		await set('token', token.value);
 		await populateWorkspaces();
+		await populateProjects();
 		await populateAssignees();
 	});
 
+	const dueDateTag = document.getElementById('dueDateTag');
+	dueDateTag.value = cfg.dueDateTag || 'd:';
+	dueDateTag.addEventListener('input', async () => {
+		await set('dueDateTag', dueDateTag.value);
+	});
+	if (!cfg.dueDateTag) {
+		await set('dueDateTag', dueDateTag.value);
+	}
+	
+	const assigneeTag = document.getElementById('assigneeTag');
+	assigneeTag.value = cfg.assigneeTag || 'a:';
+	assigneeTag.addEventListener('input', async () => {
+		await set('assigneeTag', assigneeTag.value);
+	});
+	if (!cfg.assigneeTag) {
+		await set('assigneeTag', assigneeTag.value);
+	}
+
 	await populateWorkspaces();
+	await populateProjects();
 	await populateAssignees();
 
 	const workspace = document.getElementById('workspace');
 	workspace.addEventListener('change', async () => {
 		await set('workspace', workspace.value);
+	});
+
+	const project = document.getElementById('project');
+	project.addEventListener('change', async () => {
+		await set('project', project.value);
 	});
 
 	const assignee = document.getElementById('assignee');
@@ -60,6 +85,46 @@ async function populateWorkspaces() {
 
 	if (!cfg.workspace) {
 		await set('workspace', select.value);
+	}
+}
+
+async function populateProjects() {
+	const cfg = await browser.storage.sync.get();
+
+	if (!cfg.token) {
+		return;
+	}
+
+	const projectsResp = await fetch(
+		'https://app.asana.com/api/1.0/projects',
+		{
+			method: 'GET',
+			headers: {
+				'Authorization': `Bearer ${cfg.token}`,
+				'Accept': 'application/json',
+			},
+			credentials: 'omit',
+		},
+	);
+
+	const projects = await projectsResp.json();
+
+	const select = document.getElementById('project');
+	select.innerHTML = '';
+
+	for (const project of projects.data) {
+		const option = document.createElement('option');
+		option.innerText = project.name;
+		option.value = project.gid;
+		select.appendChild(option);
+
+		if (option.value === cfg.project) {
+			option.selected = true;
+		}
+	}
+
+	if (!cfg.project) {
+		await set('project', select.value);
 	}
 }
 
