@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
-		"name": "Quick Asana",
-		"version": "0.1",
+		"name": "Quick Asana Reloaded",
+		"version": "0.2",
 		"icons": {
 			"16": "icons/idle-16.png",
 			"48": "icons/idle-48.png",
@@ -27,7 +27,7 @@
 				"128": "icons/idle-128.png",
 				"256": "icons/idle-256.png"
 			},
-			"default_title": "Quick Asana"
+			"default_title": "Quick Asana Reloaded"
 		},
 
 		"background": {
@@ -40,7 +40,7 @@
 
 		"browser_specific_settings": {
 			"gecko": {
-				"id": "{073d8528-4b24-11ed-9b73-c71d3da4ab37}"
+				"id": "{cae66bbd-57ad-4f5a-a698-ec55158b1cae}"
 			}
 		}
 }
